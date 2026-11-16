@@ -1,0 +1,13 @@
+# Kredensial dan konfigurasi lokal — jangan pernah di-commit
+.env
+
+# Berkas sementara Python / Jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# Berkas sistem
+.DS_Store
+Thumbs.db
