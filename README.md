@@ -16,38 +16,96 @@ Seluruh akuisisi, pembersihan, dan penggabungan data ada di **satu notebook**: `
 **Merge (Soal 5):** (a) × (b) pada kunci `bulan`, `validate="many_to_one"`, `indicator=True` → `data/processed/gabungan.csv`.
 Tabel (c) tidak ikut di-merge karena data kunjungan tidak punya kolom kecamatan.
 
+**API resmi portal:** Open Data Surabaya punya CKAN API, tetapi `robots.txt`-nya melarang `/api/`. Karena itu dipakai API publik Open-Meteo, sesuai alternatif yang disebut soal.
+
 ## Cara menjalankan
 
-Disarankan dijalankan dari laptop/jaringan sendiri. Kuota harian Open-Meteo dihitung per IP, dan Wikimedia mewajibkan User-Agent yang berisi kontak.
+Jalankan dari jaringan sendiri (laptop). Kuota harian Open-Meteo dihitung per IP, dan Wikimedia meminta User-Agent yang berisi kontak.
 
-1. Siapkan lingkungan Python 3.10+:
-   ```bash
-   python -m venv .venv
-   ```
-   ```bash
-   source .venv/bin/activate      # Windows: .venv\Scripts\activate
-   ```
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Buat `.env` dari contoh dan isi email kontak (dipakai di User-Agent):
-   ```bash
-   cp .env.example .env
-   ```
-   Lalu ubah baris `CONTACT_EMAIL=` di `.env`. Jika `.env` belum ada atau masih berisi contoh, notebook berhenti dengan pesan *"Buat .env dari .env.example dan isi CONTACT_EMAIL"*.
-3. Jalankan seluruh notebook dari nol dan simpan outputnya:
-   ```bash
-   jupyter nbconvert --to notebook --execute --inplace uts_dam.ipynb
-   ```
-   Lama eksekusi sekitar 1 menit, karena notebook menunggu `Crawl-delay: 10` detik antar-request ke portal CKAN.
+### Mac / Linux
 
-**Perilaku data mentah:** notebook hanya mengunduh berkas yang belum ada di `data/raw/`. Berkas yang sudah ada tidak pernah ditimpa; MD5-nya dihitung ulang dan dibandingkan dengan `provenance.csv` di akhir notebook. Tanggal akses setiap berkas mentah disimpan di berkas pendamping `*.akses`. Untuk mengulang akuisisi dari awal, kosongkan `data/raw/` secara manual (kecuali `.gitkeep`).
+```bash
+git clone https://github.com/heyitsraditya/uts-dam-pariwisata-surabaya.git
+```
+```bash
+cd uts-dam-pariwisata-surabaya
+```
+```bash
+git checkout uts-dam-surabaya
+```
+```bash
+python3 -m venv .venv
+```
+```bash
+source .venv/bin/activate
+```
+```bash
+pip install -r requirements.txt
+```
+```bash
+cp .env.example .env
+```
+Buka `.env` dengan editor teks, lalu isi `CONTACT_EMAIL=` dengan email kontak Anda.
+```bash
+jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=900 uts_dam.ipynb
+```
+```bash
+python scripts/verify_submission.py
+```
+
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/heyitsraditya/uts-dam-pariwisata-surabaya.git
+```
+```powershell
+cd uts-dam-pariwisata-surabaya
+```
+```powershell
+git checkout uts-dam-surabaya
+```
+```powershell
+py -m venv .venv
+```
+```powershell
+.venv\Scripts\Activate.ps1
+```
+Jika PowerShell menolak menjalankan skrip, jalankan sekali `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, lalu ulangi aktivasi.
+```powershell
+pip install -r requirements.txt
+```
+```powershell
+Copy-Item .env.example .env
+```
+Buka `.env` dengan Notepad, lalu isi `CONTACT_EMAIL=` dengan email kontak Anda.
+```powershell
+jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=900 uts_dam.ipynb
+```
+```powershell
+python scripts\verify_submission.py
+```
+
+### Catatan saat eksekusi
+- **Email kontak** dibaca dari environment variable `CONTACT_EMAIL`. Jika variabel itu tidak ada, notebook membacanya dari `.env`. Jika keduanya kosong, notebook berhenti dengan pesan *"CONTACT_EMAIL kosong. Buat .env dari .env.example dan isi CONTACT_EMAIL, atau set environment variable CONTACT_EMAIL."* Nilai email tidak pernah dicetak; output hanya menampilkan User-Agent dengan kontak disamarkan.
+- **Jeda 10 detik:** `robots.txt` Open Data Surabaya menetapkan `Crawl-delay: 10`, jadi notebook menunggu minimal 10 detik antar-request ke portal itu. Seluruh eksekusi butuh sekitar 1–2 menit.
+- **Menangani HTTP 429 (Too Many Requests):**
+  - `etis_get()` otomatis mencoba ulang hingga 4 kali dengan jeda 2, 4, 8, dan 16 detik, atau sesuai header `Retry-After` jika ada.
+  - Jika Open-Meteo membalas *"Daily API request limit exceeded"*, kuota harian untuk IP Anda habis. Notebook berhenti dengan pesan galat. Tunggu hingga hari berikutnya (atau pindah jaringan), lalu jalankan ulang perintah `nbconvert`. Berkas yang sudah terunduh tidak diunduh lagi.
+  - Jika Wikipedia membalas 429, pastikan `CONTACT_EMAIL` terisi, tunggu beberapa menit, lalu jalankan ulang.
+- **Tanggal akses** di `provenance.csv` diisi otomatis dari waktu unduh sebenarnya (WIB) dan disimpan di berkas pendamping `*.akses`. Notebook tidak memakai tanggal yang ditulis tangan.
+- **Data mentah tidak pernah ditimpa:** berkas yang sudah ada di `data/raw/` dipakai apa adanya, dan MD5-nya dicocokkan ulang di akhir notebook. Untuk mengulang akuisisi dari awal, kosongkan `data/raw/` secara manual (sisakan `.gitkeep`).
+- **Setelah lulus verifikasi**, commit hasilnya (`.env` otomatis diabaikan oleh `.gitignore`):
+  ```bash
+  git add uts_dam.ipynb data provenance.csv data_ethics_checklist.md
+  ```
 
 ## Struktur folder
 
 ```
 .
 ├── uts_dam.ipynb               # notebook tunggal (Setup, Soal 1–5, Ringkasan)
+├── scripts/
+│   └── verify_submission.py    # pemeriksaan LULUS/GAGAL setelah notebook dieksekusi
 ├── data/
 │   ├── raw/                    # data mentah, immutable (+ berkas *.akses = tanggal akses)
 │   │   ├── ckan_surabaya_wisman_wisnus_tempat_wisata.csv
@@ -55,6 +113,9 @@ Disarankan dijalankan dari laptop/jaringan sendiri. Kuota harian Open-Meteo dihi
 │   │   ├── ckan_surabaya_about.html            # bukti ketentuan/dasar hukum portal
 │   │   ├── ckan_surabaya_robots.txt
 │   │   ├── open_meteo_surabaya_harian_2025.json
+│   │   ├── open_meteo_lisensi.html             # bukti lisensi CC BY 4.0
+│   │   ├── open_meteo_ketentuan.html           # bukti ketentuan pemakaian API
+│   │   ├── open_meteo_robots.txt
 │   │   ├── wikipedia_kecamatan_surabaya.html
 │   │   └── wikipedia_id_robots.txt
 │   └── processed/
@@ -65,7 +126,7 @@ Disarankan dijalankan dari laptop/jaringan sendiri. Kuota harian Open-Meteo dihi
 │       └── gabungan_metadata.json
 ├── provenance.csv              # URL, tanggal akses, lisensi, MD5, metode tiap sumber
 ├── data_ethics_checklist.md    # 9 butir (dibuat ulang oleh notebook)
-├── DEMO.md                     # skrip demo 3–5 menit + tanya-jawab
+├── DEMO.md                     # skrip demo 5 menit + tanya-jawab
 ├── requirements.txt
 ├── .env.example                # contoh konfigurasi; .env asli tidak di-commit
 └── .gitignore
@@ -73,19 +134,27 @@ Disarankan dijalankan dari laptop/jaringan sendiri. Kuota harian Open-Meteo dihi
 
 Berkas di `data/raw/`, `data/processed/`, dan `provenance.csv` dihasilkan saat notebook dijalankan.
 
+## Pemeriksaan `scripts/verify_submission.py`
+1. Semua sel kode punya `execution_count` berurutan, tidak ada output error, dan setiap sel punya output.
+2. Merge: 192 baris sebelum = sesudah, semua `both`, `duplicated().sum() == 0`, dan MD5 `gabungan.csv` cocok dengan metadata.
+3. `provenance.csv`: URL, tanggal akses, lisensi, dan MD5 ada untuk setiap sumber; MD5 cocok dengan berkas di `data/raw/`; setiap berkas raw tercatat.
+4. Berkas keluaran wajib tersedia dan sudah ter-track git.
+5. `.env` tidak ter-track git, dan nilai `CONTACT_EMAIL` tidak muncul di berkas mana pun yang ter-track maupun di output notebook. Nilai itu tidak pernah dicetak.
+
 ## Etika akuisisi (ringkas)
-- `robots.txt` diperiksa dengan `urllib.robotparser` sebelum akses. CKAN Surabaya melarang `/api/`, jadi API CKAN tidak dipakai; `Crawl-delay: 10` ditegakkan.
-- Setiap request memakai `timeout`, User-Agent jujur berisi kontak, jeda antar-request per host, dan retry dengan *exponential backoff* untuk 429/5xx (menghormati `Retry-After`).
+- `robots.txt` diperiksa dengan `urllib.robotparser` sebelum akses (CKAN Surabaya, Wikipedia, Open-Meteo). CKAN Surabaya melarang `/api/`, jadi API CKAN tidak dipakai; `Crawl-delay: 10` ditegakkan.
+- Setiap request memakai `timeout`, User-Agent jujur berisi kontak, jeda antar-request per host, dan retry dengan *exponential backoff* untuk 429/5xx.
 - Tidak memakai sumber yang dilarang soal (Booking.com, Agoda, Traveloka, tiket.com, Airbnb, Tripadvisor, Google Maps, media sosial).
-- Tidak ada API key. Email kontak hanya ada di `.env` lokal.
+- Tidak ada API key. Soal meminta email kampus di User-Agent, tetapi mahasiswa tidak diberi email kampus, sehingga dipakai email pribadi yang hanya ada di `.env` lokal atau environment variable.
 
 ## Catatan kualitas data
 - Kolom `tahun` berisi 2025 (12 bulan) dan 2026 (Jan–Okt). `TAHUN_DATA` diambil dari tahun yang lengkap 12 bulan, yaitu 2025.
 - Satu nama destinasi punya spasi di ujung (`'ALUN ALUN SURABAYA BALAI PEMUDA '`). Spasi itu dibersihkan dengan `str.strip()` saat merge, dan perubahannya didokumentasikan.
+- Nilai nol adalah data sah (tidak ada kunjungan tercatat), bukan data hilang.
 - Angka **Juni dan Juli 2025 identik untuk ke-16 destinasi**. Ini dugaan kesalahan salin di sumber; temuan dilaporkan di notebook (Soal 1.5) dan `gabungan_metadata.json`, dan datanya tidak dikoreksi.
-- Dataset kandidat lain yang dievaluasi saat seleksi (*Jumlah Hotel per Kecamatan* dan *Jumlah kunjungan wisatawan di objek wisata*) hanya diunduh sementara untuk pengecekan jumlah baris. Keduanya tidak disimpan di repo dan tidak dipakai.
+- Dataset kandidat lain yang dievaluasi saat seleksi tidak disimpan di repo dan tidak dipakai.
 
 ## Atribusi
 - Data kunjungan wisatawan: Dinas Kebudayaan, Kepemudaan dan Olah Raga serta Pariwisata Kota Surabaya, melalui Open Data Surabaya (ckan.surabaya.go.id). Lisensi tidak dicantumkan; dipakai untuk keperluan akademik.
-- Data cuaca: [Open-Meteo.com](https://open-meteo.com/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Data reanalisis ERA5 dari Copernicus/ECMWF.
+- Data cuaca: [Open-Meteo.com](https://open-meteo.com/), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
 - Tabel kecamatan: kontributor Wikipedia, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
