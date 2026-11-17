@@ -3,7 +3,7 @@
 Cara pakai (dari root repo):
     python scripts/verify_submission.py
 
-Setiap pemeriksaan mencetak LULUS atau GAGAL. Kode keluar 0 jika semua lulus, 1 jika ada yang gagal.
+Setiap pemeriksaan mencetak LULUS, GAGAL, atau PERINGATAN. Kode keluar 0 jika tidak ada GAGAL, 1 jika ada.
 Nilai CONTACT_EMAIL hanya dibandingkan di memori dan TIDAK PERNAH dicetak.
 """
 import csv
@@ -18,14 +18,19 @@ ROOT = Path(__file__).resolve().parent.parent
 NOTEBOOK = ROOT / "uts_dam.ipynb"
 RAW_DIR = ROOT / "data" / "raw"
 PROCESSED_DIR = ROOT / "data" / "processed"
+BERKAS_UTAMA = RAW_DIR / "banyaknya-wisman-wisnus-2026.csv"
+BUKTI_PNG = ROOT / "docs" / "bukti_metadata_data_go_id_2026-11-17.png"
+TANGGAL_AKSES_UTAMA = "2026-11-17"
+PLACEHOLDER = "[ISI SEBELUM KUMPUL]"
 BARIS_MERGE_DIHARAPKAN = 192
 
-hasil = []  # daftar (nama pemeriksaan, lulus?, keterangan)
+hasil = []  # daftar (status, nama pemeriksaan, keterangan)
 
 
-def catat(nama, lulus, keterangan=""):
-    """Simpan hasil satu pemeriksaan."""
-    hasil.append((nama, bool(lulus), keterangan))
+def catat(nama, lulus, keterangan="", peringatan=False):
+    """Simpan hasil satu pemeriksaan: LULUS, GAGAL, atau PERINGATAN (tidak menggagalkan)."""
+    status = "LULUS" if lulus else ("PERINGATAN" if peringatan else "GAGAL")
+    hasil.append((status, nama, keterangan))
 
 
 def md5_file(path):
@@ -54,13 +59,12 @@ def baca_contact_email():
 
 
 # ---------------------------------------------------------------- 1. Notebook
-nb = None
 try:
     nb = json.loads(NOTEBOOK.read_text(encoding="utf-8"))
     sel_kode = [c for c in nb["cells"] if c["cell_type"] == "code"]
     nomor = [c.get("execution_count") for c in sel_kode]
-    berurutan = nomor == list(range(1, len(sel_kode) + 1))
-    catat("Notebook: semua sel kode dieksekusi dengan execution_count berurutan", berurutan,
+    catat("Notebook: semua sel kode dieksekusi dengan execution_count berurutan",
+          nomor == list(range(1, len(sel_kode) + 1)),
           f"{len(sel_kode)} sel kode; nomor pertama yang tidak sesuai: "
           f"{next((n for i, n in enumerate(nomor, 1) if n != i), '-')}")
     sel_error = [n for c, n in zip(sel_kode, nomor)
@@ -97,38 +101,59 @@ try:
         prov = list(csv.DictReader(f))
     wajib = ["url", "tanggal_akses", "lisensi", "md5", "path_lokal"]
     tidak_lengkap = [p.get("sumber_id") for p in prov if any(not (p.get(k) or "").strip() for k in wajib)]
-    catat("Provenance: setiap baris punya URL, tanggal akses, lisensi, MD5", prov and not tidak_lengkap,
+    catat("Provenance: setiap baris punya URL, tanggal akses, lisensi, MD5", bool(prov) and not tidak_lengkap,
           f"{len(prov)} baris; tidak lengkap: {tidak_lengkap or 'tidak ada'}")
     tidak_cocok = [p["sumber_id"] for p in prov
                    if not (ROOT / p["path_lokal"]).exists() or md5_file(ROOT / p["path_lokal"]) != p["md5"]]
-    catat("Provenance: MD5 cocok dengan berkas di data/raw", prov and not tidak_cocok,
+    catat("Provenance: MD5 cocok dengan berkas di data/raw", bool(prov) and not tidak_cocok,
           f"tidak cocok/hilang: {tidak_cocok or 'tidak ada'}")
     tercatat = {p["path_lokal"] for p in prov}
-    berkas_raw = {str(p.relative_to(ROOT)) for p in RAW_DIR.iterdir()
+    berkas_raw = {str(p.relative_to(ROOT)) for p in RAW_DIR.rglob("*")
                   if p.is_file() and p.name != ".gitkeep" and not p.name.endswith(".akses")}
-    catat("Provenance: setiap berkas di data/raw tercatat", berkas_raw <= tercatat,
+    catat("Provenance: setiap berkas di data/raw (termasuk subfolder) tercatat", berkas_raw <= tercatat,
           f"belum tercatat: {sorted(berkas_raw - tercatat) or 'tidak ada'}")
     akses_beda = [p["sumber_id"] for p in prov
                   if (ROOT / (p["path_lokal"] + ".akses")).exists()
                   and (ROOT / (p["path_lokal"] + ".akses")).read_text(encoding="utf-8").strip() != p["tanggal_akses"]]
     catat("Provenance: tanggal akses sama dengan catatan *.akses saat unduh", not akses_beda,
           f"berbeda: {akses_beda or 'tidak ada'}")
+
+    # Sumber utama: data.go.id, tanggal akses 17 November 2026, MD5 cocok dengan berkas data.go.id
+    utama = [p for p in prov if p["path_lokal"] == str(BERKAS_UTAMA.relative_to(ROOT))]
+    if not utama:
+        catat("Provenance: baris sumber utama data.go.id ada", False, f"tidak ada baris untuk {BERKAS_UTAMA.name}")
+    else:
+        u = utama[0]
+        catat("Provenance: sumber utama memuat domain data.go.id dan tanggal 17 November 2026",
+              "data.go.id" in u.get("url", "") and TANGGAL_AKSES_UTAMA in u.get("tanggal_akses", ""),
+              f"url berisi data.go.id: {'data.go.id' in u.get('url', '')}; tanggal_akses: {u.get('tanggal_akses')}")
+        catat("Provenance: MD5 berkas data.go.id cocok dengan provenance.csv",
+              BERKAS_UTAMA.exists() and md5_file(BERKAS_UTAMA) == u.get("md5"),
+              f"berkas ada: {BERKAS_UTAMA.exists()}")
 except (OSError, KeyError) as err:
     catat("Provenance: provenance.csv tersedia", False, str(err))
 
-# ---------------------------------------------------------------- 4. Berkas wajib
+# ---------------------------------------------------------------- 4. Berkas wajib, placeholder, dan bukti
 wajib_ada = ["uts_dam.ipynb", "README.md", "DEMO.md", "data_ethics_checklist.md", "provenance.csv",
              "requirements.txt", ".env.example", ".gitignore", "data/processed/gabungan.csv",
-             "data/processed/gabungan_metadata.json"]
+             "data/processed/gabungan_metadata.json", str(BERKAS_UTAMA.relative_to(ROOT))]
 hilang = [b for b in wajib_ada if not (ROOT / b).exists()]
 catat("Berkas keluaran wajib tersedia", not hilang, f"hilang: {hilang or 'tidak ada'}")
 
-# ---------------------------------------------------------------- 5. Kebersihan rahasia
+berkas_placeholder = ["provenance.csv", "README.md", "DEMO.md", "data_ethics_checklist.md", "uts_dam.ipynb"]
+masih_kosong = [b for b in berkas_placeholder
+                if (ROOT / b).exists() and PLACEHOLDER in (ROOT / b).read_text(encoding="utf-8")]
+catat(f"Tidak ada '{PLACEHOLDER}' yang tersisa", not masih_kosong, f"masih ada di: {masih_kosong or 'tidak ada'}")
+
+catat("Bukti tangkapan layar metadata data.go.id tersedia", BUKTI_PNG.exists(),
+      f"{BUKTI_PNG.relative_to(ROOT)} {'ada' if BUKTI_PNG.exists() else 'belum ditambahkan'}", peringatan=True)
+
+# ---------------------------------------------------------------- 5. Kebersihan rahasia dan git
 try:
     tracked = git_ls_files()
     catat(".env tidak ter-track git", ".env" not in tracked)
     belum_track = [b for b in git_ls_files("--others", "--exclude-standard")
-                   if b.startswith("data/") or b in wajib_ada]
+                   if b.startswith("data/") or b.startswith("docs/") or b in wajib_ada]
     catat("Semua keluaran sudah ter-track git (siap commit)", not belum_track,
           f"belum di-git add: {belum_track[:8] or 'tidak ada'}")
 
@@ -148,9 +173,9 @@ except (OSError, subprocess.CalledProcessError) as err:
     catat("Git: repo dapat diperiksa", False, str(err))
 
 # ---------------------------------------------------------------- Laporan
-lebar = max(len(n) for n, _, _ in hasil)
-for nama, lulus, ket in hasil:
-    print(f"[{'LULUS' if lulus else 'GAGAL'}] {nama.ljust(lebar)}  {ket}")
-jumlah_gagal = sum(not lulus for _, lulus, _ in hasil)
-print(f"\nRingkasan: {len(hasil) - jumlah_gagal} LULUS, {jumlah_gagal} GAGAL")
-sys.exit(1 if jumlah_gagal else 0)
+lebar = max(len(n) for _, n, _ in hasil)
+for status, nama, ket in hasil:
+    print(f"[{status:<10}] {nama.ljust(lebar)}  {ket}")
+jumlah = {s: sum(h[0] == s for h in hasil) for s in ("LULUS", "GAGAL", "PERINGATAN")}
+print(f"\nRingkasan: {jumlah['LULUS']} LULUS, {jumlah['GAGAL']} GAGAL, {jumlah['PERINGATAN']} PERINGATAN")
+sys.exit(1 if jumlah["GAGAL"] else 0)
