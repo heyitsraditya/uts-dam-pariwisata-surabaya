@@ -1,0 +1,155 @@
+{
+  "judul": "Kunjungan wisatawan per destinasi x cuaca bulanan Kota Surabaya",
+  "tahun_data": 2025,
+  "sumber": [
+    {
+      "id": "A_data_go_id",
+      "nama": "Banyaknya Kunjungan Wisatawan Nusantara dan Wisatawan Mancanegara menurut Tempat Wisata",
+      "katalog": "data.go.id",
+      "url_halaman": "https://data.go.id/dataset/dataset/banyaknya-kunjungan-wisatawan-nusantara-dan-wisatawan-mancanegara-menurut-tempat-wisata-ta-2025",
+      "url_unduhan": "https://ckan.surabaya.go.id/dataset/5c1cb1a5-8b39-42df-a8c3-48fff07fec6e/resource/3a969972-e959-462d-b37b-cbdd14830f0b/download/banyaknya-wisman-wisnus-2026.csv",
+      "host_berkas": "ckan.surabaya.go.id",
+      "penerbit_asli": "Pemerintah Kota Surabaya",
+      "lisensi": "Lisensi tidak dicantumkan pada tabel metadata halaman dataset data.go.id. Status akses di portal: Terbuka.",
+      "md5": "2658a38dff0ec62756fbd1147fd6914a",
+      "baris_dipakai": 192
+    },
+    {
+      "id": "B_open_meteo",
+      "nama": "Open-Meteo Historical Weather API (harian -> bulanan)",
+      "url": "https://archive-api.open-meteo.com/v1/archive",
+      "parameter": {
+        "latitude": -7.2575,
+        "longitude": 112.7521,
+        "start_date": "2025-01-01",
+        "end_date": "2025-12-31",
+        "daily": "temperature_2m_mean,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_hours,sunshine_duration,wind_speed_10m_max",
+        "timezone": "Asia/Jakarta"
+      },
+      "lisensi": "CC BY 4.0",
+      "baris_dipakai": 12
+    }
+  ],
+  "sumber_tidak_digabung": [
+    {
+      "id": "C_wikipedia_html",
+      "url": "https://id.wikipedia.org/wiki/Daftar_kecamatan_dan_kelurahan_di_Kota_Surabaya",
+      "alasan": "tidak ada kolom kecamatan di data kunjungan; hanya Soal 4"
+    }
+  ],
+  "kunci_merge": [
+    "bulan"
+  ],
+  "perubahan_kunci": [
+    {
+      "sumber": "kunjungan",
+      "kolom": "nama_destinasi",
+      "perubahan": "str.strip() menghapus spasi di ujung (hanya pada salinan)",
+      "baris_terdampak": 12,
+      "contoh": "'ALUN ALUN SURABAYA BALAI PEMUDA ' -> tanpa spasi akhir"
+    },
+    {
+      "sumber": "kunjungan",
+      "kolom": "periode -> bulan",
+      "perubahan": "nama bulan Indonesia dipetakan ke angka 1-12",
+      "baris_terdampak": 192,
+      "contoh": "'Januari' -> 1, ..., 'Desember' -> 12"
+    },
+    {
+      "sumber": "kunjungan",
+      "kolom": "tahun",
+      "perubahan": "difilter ke TAHUN_DATA = 2025",
+      "baris_terdampak": 160,
+      "contoh": "baris tahun lain dikecualikan dari analisis (tetap ada di raw)"
+    },
+    {
+      "sumber": "kunjungan",
+      "kolom": "diduga_salinan",
+      "perubahan": "kolom penanda ditambahkan (nilai tidak diubah)",
+      "baris_terdampak": 32,
+      "contoh": "bulan bertanda: ['Juli', 'November']"
+    },
+    {
+      "sumber": "cuaca",
+      "kolom": "time -> bulan",
+      "perubahan": "tanggal harian diagregasi per bulan (dt.month)",
+      "baris_terdampak": 365,
+      "contoh": "365 baris harian -> 12 baris bulanan"
+    }
+  ],
+  "how": "left",
+  "validate": "many_to_one",
+  "baris_sebelum_merge": 192,
+  "baris_sesudah_merge": 192,
+  "jumlah_kolom": 17,
+  "kolom": [
+    "tahun",
+    "bulan",
+    "nama_bulan",
+    "kode_kota",
+    "nama_kota",
+    "nama_destinasi",
+    "wisnus",
+    "wisman",
+    "diduga_salinan",
+    "suhu_rata2_c",
+    "suhu_maks_c",
+    "suhu_min_c",
+    "curah_hujan_mm",
+    "jam_hujan",
+    "hari_hujan",
+    "sinar_matahari_jam",
+    "angin_maks_kmh"
+  ],
+  "status_merge": {
+    "both": 192,
+    "left_only": 0,
+    "right_only": 0
+  },
+  "duplikat": 0,
+  "catatan_kualitas": {
+    "pasangan_bulan_diduga_disalin": [
+      {
+        "tahun": 2025,
+        "bulan_1": "Juni",
+        "bulan_2": "Juli",
+        "destinasi_identik": "16 dari 16",
+        "yang_berbeda": "-"
+      },
+      {
+        "tahun": 2025,
+        "bulan_1": "Juni",
+        "bulan_2": "November",
+        "destinasi_identik": "15 dari 16",
+        "yang_berbeda": "JAMBOREE PLAYLAND: wisman 0 vs 0, wisnus 3219 vs 5188"
+      },
+      {
+        "tahun": 2025,
+        "bulan_1": "Juli",
+        "bulan_2": "November",
+        "destinasi_identik": "15 dari 16",
+        "yang_berbeda": "JAMBOREE PLAYLAND: wisman 0 vs 0, wisnus 3219 vs 5188"
+      },
+      {
+        "tahun": 2026,
+        "bulan_1": "September",
+        "bulan_2": "Oktober",
+        "destinasi_identik": "15 dari 16",
+        "yang_berbeda": "MAKAM SAWUNGGALING: wisman 0 vs 0, wisnus 1574 vs 0"
+      }
+    ],
+    "bulan_bertanda_diduga_salinan": [
+      "Juli 2025",
+      "November 2025",
+      "Oktober 2026"
+    ],
+    "nilai_nol_subset": {
+      "wisman": 71,
+      "wisnus": 1
+    },
+    "ketidakcocokan_metadata_katalog": "(1) label resource 'per Januari 2025 - Agustus 2026' tetapi berkas sampai Oktober 2026; (2) metadata dimodifikasi 25-09-2026 tetapi berkas memuat data Oktober 2026; (3) slug URL berakhiran '-ta-2025' tetapi berkas memuat tahun [2025, 2026]. data.go.id = katalog; berkas dihosting di ckan.surabaya.go.id dan diperbarui tanpa metadata katalog ikut berubah."
+  },
+  "tanggal_proses": "2026-11-17T13:18:42+07:00",
+  "berkas": "data/processed/gabungan.csv",
+  "md5": "3113f35ec241765448a146bbafb9331d"
+}

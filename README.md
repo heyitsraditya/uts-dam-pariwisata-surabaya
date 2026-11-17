@@ -5,8 +5,8 @@ Mata kuliah Data Acquisition & Management, Informatika Kelas E, INSTIKI. Dosen: 
 
 | | |
 |---|---|
-| Nama | [ISI SEBELUM KUMPUL] |
-| NIM | [ISI SEBELUM KUMPUL] |
+| Nama | I Gede Raditya Ananda Putra|
+| NIM | 2501010024 |
 
 Seluruh akuisisi, pembersihan, dan penggabungan data ada di **satu notebook**: `uts_dam.ipynb`.
 
