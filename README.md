@@ -15,7 +15,7 @@ Seluruh akuisisi, pembersihan, dan penggabungan data ada di **satu notebook**: `
 | Sumber | Jenis | Isi | Lisensi |
 |---|---|---|---|
 | (a) **data.go.id**: [*Banyaknya Kunjungan Wisatawan Nusantara dan Wisatawan Mancanegara menurut Tempat Wisata*](https://data.go.id/dataset/dataset/banyaknya-kunjungan-wisatawan-nusantara-dan-wisatawan-mancanegara-menurut-tempat-wisata-ta-2025), organisasi Kota Surabaya, Dataset ID `5c1cb1a5-8b39-42df-a8c3-48fff07fec6e` | Berkas CSV `banyaknya-wisman-wisnus-2026.csv` (pemisah `;`) | 352 baris × 9 kolom, 16 destinasi; Januari 2025 s.d. Oktober 2026. Analisis memakai 2025 (192 baris, 12 bulan). | Lisensi tidak dicantumkan pada tabel metadata halaman dataset data.go.id. Status akses di portal: Terbuka. |
-| (b) [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) | API JSON (tanpa key) | Cuaca harian 1 titik Kota Surabaya (lat -7.2575, lon 112.7521), 1 Januari–31 Desember 2025 → 365 baris harian → 12 baris bulanan | CC BY 4.0 (perlu dicek manual, lihat di bawah) |
+| (b) [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) | API JSON (tanpa key) | Cuaca harian 1 titik Kota Surabaya (lat -7.2575, lon 112.7521), 1 Januari–31 Desember 2025 → 365 baris harian → 12 baris bulanan | CC BY 4.0 (diverifikasi otomatis dari halaman lisensi saat eksekusi) |
 | (c) [Wikipedia ID: Daftar kecamatan dan kelurahan di Kota Surabaya](https://id.wikipedia.org/wiki/Daftar_kecamatan_dan_kelurahan_di_Kota_Surabaya) | Scraping HTML | 31 kecamatan (kode Kemendagri, kodepos, jumlah kelurahan); hanya untuk Soal 4 | CC BY-SA 4.0 |
 
 ### Peran pihak pada sumber (a)
@@ -122,7 +122,8 @@ python scripts\verify_submission.py
   - Sumber utama (data.go.id): **17 November 2026**, tanggal unduhan manual (statis).
   - Sumber lain (verifikasi CKAN, Open-Meteo, Wikipedia, robots.txt): diisi otomatis dari waktu unduh sebenarnya (WIB) dan disimpan di berkas pendamping `*.akses`.
 - **Data mentah tidak pernah ditimpa:** berkas yang sudah ada di `data/raw/` dipakai apa adanya, dan MD5-nya dicocokkan ulang di akhir notebook.
-- **Bukti Open-Meteo perlu dicek manual:** frasa "CC BY 4.0", "non-commercial", dan "10,000" di sel bukti Soal 3 belum diverifikasi dari halaman asli. Periksa kutipannya di output setelah notebook dijalankan.
+- **Bukti Open-Meteo diverifikasi otomatis:** saat eksekusi, kode mencari frasa "CC BY 4.0", "non-commercial", dan "10,000" di halaman lisensi dan ketentuan yang diunduh, lalu menampilkan kutipannya. Frasa yang tidak ditemukan ditandai `TIDAK DITEMUKAN`, dan `verify_submission.py` memberi PERINGATAN agar halamannya Anda periksa manual (misalnya karena penulisan angka di halaman berbeda).
+- **Alasan API (Soal 3.1):** isi bagian data.go.id yang masih berupa placeholder (tanda kurung siku bertuliskan ISI SEBELUM KUMPUL) dengan hasil pemeriksaan Anda: apakah data.go.id menyediakan API publik terdokumentasi untuk mengambil isi dataset ini.
 - **Setelah lulus verifikasi**, tambahkan tangkapan layar metadata lalu commit hasilnya (`.env` otomatis diabaikan oleh `.gitignore`):
   ```bash
   git add uts_dam.ipynb data docs provenance.csv data_ethics_checklist.md README.md
@@ -143,8 +144,8 @@ python scripts\verify_submission.py
 │   │   ├── ckan_check/banyaknya-wisman-wisnus-2026.csv   # unduhan skrip dari tautan yang sama (verifikasi)
 │   │   ├── ckan_surabaya_robots.txt
 │   │   ├── open_meteo_surabaya_harian_2025.json
-│   │   ├── open_meteo_lisensi.html               # bukti lisensi (perlu dicek manual)
-│   │   ├── open_meteo_ketentuan.html             # bukti ketentuan pemakaian API (perlu dicek manual)
+│   │   ├── open_meteo_lisensi.html               # bukti lisensi
+│   │   ├── open_meteo_ketentuan.html             # bukti ketentuan pemakaian API
 │   │   ├── open_meteo_robots.txt
 │   │   ├── wikipedia_kecamatan_surabaya.html
 │   │   └── wikipedia_id_robots.txt
@@ -172,7 +173,7 @@ python scripts\verify_submission.py
    - URL, tanggal akses, lisensi, dan MD5 ada untuk setiap sumber, dan MD5 cocok dengan berkas di `data/raw/`.
    - Setiap berkas raw, termasuk yang di subfolder, tercatat.
    - Baris sumber utama memuat domain data.go.id dan tanggal 17 November 2026.
-4. Berkas keluaran wajib tersedia dan sudah ter-track git. **GAGAL** jika masih ada `[ISI SEBELUM KUMPUL]`; **PERINGATAN** jika tangkapan layar bukti belum ada.
+4. Berkas keluaran wajib tersedia dan sudah ter-track git. **GAGAL** jika masih ada placeholder (tanda kurung siku bertuliskan ISI SEBELUM KUMPUL); **PERINGATAN** jika tangkapan layar bukti belum ada atau ada frasa bukti Open-Meteo yang tidak ditemukan.
 5. `.env` tidak ter-track git, dan nilai `CONTACT_EMAIL` tidak muncul di berkas mana pun yang ter-track maupun di output notebook. Nilai itu tidak pernah dicetak.
 
 ## Etika akuisisi (ringkas)

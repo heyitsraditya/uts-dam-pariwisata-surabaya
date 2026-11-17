@@ -145,6 +145,29 @@ masih_kosong = [b for b in berkas_placeholder
                 if (ROOT / b).exists() and PLACEHOLDER in (ROOT / b).read_text(encoding="utf-8")]
 catat(f"Tidak ada '{PLACEHOLDER}' yang tersisa", not masih_kosong, f"masih ada di: {masih_kosong or 'tidak ada'}")
 
+def teks_output_notebook():
+    """Gabungkan teks OUTPUT sel kode saja (kode sumber sendiri memuat kata kunci yang dicari)."""
+    try:
+        sel = json.loads(NOTEBOOK.read_text(encoding="utf-8"))["cells"]
+    except (OSError, json.JSONDecodeError, KeyError):
+        return ""
+    potongan = []
+    for c in sel:
+        for o in c.get("outputs", []):
+            for isi in [o.get("text", "")] + list(o.get("data", {}).values()):
+                potongan.append("".join(isi) if isinstance(isi, list) else str(isi))
+    return "\n".join(potongan)
+
+
+frasa_hilang = []
+if (ROOT / "provenance.csv").exists() and "TIDAK DITEMUKAN" in (ROOT / "provenance.csv").read_text(encoding="utf-8"):
+    frasa_hilang.append("provenance.csv")
+if "TIDAK DITEMUKAN" in teks_output_notebook():
+    frasa_hilang.append("uts_dam.ipynb (output)")
+catat("Frasa bukti lisensi/ketentuan Open-Meteo ditemukan di halaman asli", not frasa_hilang,
+      f"ada frasa 'TIDAK DITEMUKAN' di: {frasa_hilang or 'tidak ada'} (periksa halaman secara manual)",
+      peringatan=True)
+
 catat("Bukti tangkapan layar metadata data.go.id tersedia", BUKTI_PNG.exists(),
       f"{BUKTI_PNG.relative_to(ROOT)} {'ada' if BUKTI_PNG.exists() else 'belum ditambahkan'}", peringatan=True)
 
