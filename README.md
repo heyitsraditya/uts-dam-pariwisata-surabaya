@@ -15,7 +15,7 @@ Seluruh akuisisi, pembersihan, dan penggabungan data ada di **satu notebook**: `
 | Sumber | Jenis | Isi | Lisensi |
 |---|---|---|---|
 | (a) **data.go.id**: [*Banyaknya Kunjungan Wisatawan Nusantara dan Wisatawan Mancanegara menurut Tempat Wisata*](https://data.go.id/dataset/dataset/banyaknya-kunjungan-wisatawan-nusantara-dan-wisatawan-mancanegara-menurut-tempat-wisata-ta-2025), organisasi Kota Surabaya, Dataset ID `5c1cb1a5-8b39-42df-a8c3-48fff07fec6e` | Berkas CSV `banyaknya-wisman-wisnus-2026.csv` (pemisah `;`) | 352 baris × 9 kolom, 16 destinasi; Januari 2025 s.d. Oktober 2026. Analisis memakai 2025 (192 baris, 12 bulan). | Lisensi tidak dicantumkan pada tabel metadata halaman dataset data.go.id. Status akses di portal: Terbuka. |
-| (b) [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) | API JSON (tanpa key) | Cuaca harian 1 titik Kota Surabaya (lat -7.2575, lon 112.7521), 1 Januari–31 Desember 2025 → 365 baris harian → 12 baris bulanan | CC BY 4.0 (diverifikasi otomatis dari halaman lisensi saat eksekusi) |
+| (b) [Open-Meteo Historical Weather API](https://open-meteo.com/en/docs/historical-weather-api) | API JSON (tanpa key) | Cuaca harian 1 titik Kota Surabaya (lat -7.2575, lon 112.7521), 1 Januari–31 Desember 2025 → 365 baris harian → 12 baris bulanan | CC-BY 4.0 menurut halaman ketentuan Open-Meteo (diverifikasi otomatis saat eksekusi) |
 | (c) [Wikipedia ID: Daftar kecamatan dan kelurahan di Kota Surabaya](https://id.wikipedia.org/wiki/Daftar_kecamatan_dan_kelurahan_di_Kota_Surabaya) | Scraping HTML | 31 kecamatan (kode Kemendagri, kodepos, jumlah kelurahan); hanya untuk Soal 4 | CC BY-SA 4.0 |
 
 ### Peran pihak pada sumber (a)
@@ -122,7 +122,7 @@ python scripts\verify_submission.py
   - Sumber utama (data.go.id): **17 November 2026**, tanggal unduhan manual (statis).
   - Sumber lain (verifikasi CKAN, Open-Meteo, Wikipedia, robots.txt): diisi otomatis dari waktu unduh sebenarnya (WIB) dan disimpan di berkas pendamping `*.akses`.
 - **Data mentah tidak pernah ditimpa:** berkas yang sudah ada di `data/raw/` dipakai apa adanya, dan MD5-nya dicocokkan ulang di akhir notebook.
-- **Bukti Open-Meteo diverifikasi otomatis:** saat eksekusi, kode mencari frasa "CC BY 4.0", "non-commercial", dan "10,000" di halaman lisensi dan ketentuan yang diunduh, lalu menampilkan kutipannya. Frasa yang tidak ditemukan ditandai `TIDAK DITEMUKAN`, dan `verify_submission.py` memberi PERINGATAN agar halamannya Anda periksa manual (misalnya karena penulisan angka di halaman berbeda).
+- **Bukti Open-Meteo diverifikasi otomatis:** saat eksekusi, kode mencari frasa "CC-BY 4.0 licence", "non-commercial", dan "10'000 API calls per day" (ejaan asli halaman ketentuan) dengan pola regex yang toleran ejaan, lalu menampilkan kutipannya. Halaman `/en/license` dirender lewat JavaScript sehingga teksnya kosong saat diunduh, jadi bukti lisensi diambil dari halaman ketentuan (`/en/terms`). Frasa yang tidak ditemukan ditandai di output dan di `provenance.csv`, dan `verify_submission.py` memberi PERINGATAN agar halamannya Anda periksa manual.
 - **Alasan API (Soal 3.1):** isi bagian data.go.id yang masih berupa placeholder (tanda kurung siku bertuliskan ISI SEBELUM KUMPUL) dengan hasil pemeriksaan Anda: apakah data.go.id menyediakan API publik terdokumentasi untuk mengambil isi dataset ini.
 - **Setelah lulus verifikasi**, tambahkan tangkapan layar metadata lalu commit hasilnya (`.env` otomatis diabaikan oleh `.gitignore`):
   ```bash
