@@ -69,7 +69,7 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 ```
-Buka `.env` dengan editor teks, lalu isi `CONTACT_EMAIL=` dengan email kontak Anda. Setelah itu salin berkas `banyaknya-wisman-wisnus-2026.csv` hasil unduhan data.go.id ke `data/raw/` tanpa mengubah nama atau isinya.
+Isi `.env` hasil salinan sudah berupa email kampus: `CONTACT_EMAIL=mahasiswa@instiki.ac.id` (periksa dengan `cat .env`). Jika belum ada, buat dengan `printf 'CONTACT_EMAIL=mahasiswa@instiki.ac.id\n' > .env`. Setelah itu salin berkas `banyaknya-wisman-wisnus-2026.csv` hasil unduhan data.go.id ke `data/raw/` tanpa mengubah nama atau isinya.
 ```bash
 jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=900 uts_dam.ipynb
 ```
@@ -101,7 +101,7 @@ pip install -r requirements.txt
 ```powershell
 Copy-Item .env.example .env
 ```
-Buka `.env` dengan Notepad, lalu isi `CONTACT_EMAIL=` dengan email kontak Anda. Setelah itu salin berkas `banyaknya-wisman-wisnus-2026.csv` hasil unduhan data.go.id ke `data\raw\` tanpa mengubah nama atau isinya.
+Isi `.env` hasil salinan sudah berupa email kampus: `CONTACT_EMAIL=mahasiswa@instiki.ac.id` (periksa dengan `Get-Content .env`). Jika belum ada, buat dengan `Set-Content .env 'CONTACT_EMAIL=mahasiswa@instiki.ac.id'`. Setelah itu salin berkas `banyaknya-wisman-wisnus-2026.csv` hasil unduhan data.go.id ke `data\raw\` tanpa mengubah nama atau isinya.
 ```powershell
 jupyter nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=900 uts_dam.ipynb
 ```
@@ -110,7 +110,7 @@ python scripts\verify_submission.py
 ```
 
 ### Catatan saat eksekusi
-- **Email kontak** dibaca dari environment variable `CONTACT_EMAIL`. Jika variabel itu tidak ada, notebook membacanya dari `.env`. Jika keduanya kosong, notebook berhenti dengan pesan *"CONTACT_EMAIL kosong. Buat .env dari .env.example dan isi CONTACT_EMAIL, atau set environment variable CONTACT_EMAIL."* Nilai email tidak pernah dicetak; output hanya menampilkan User-Agent dengan kontak disamarkan.
+- **Email kontak (email kampus)** `mahasiswa@instiki.ac.id` dibaca dari environment variable `CONTACT_EMAIL`. Jika variabel itu tidak ada, notebook membacanya dari `.env`. Jika keduanya kosong, notebook berhenti dengan pesan *"CONTACT_EMAIL kosong. Buat .env dari .env.example dan isi CONTACT_EMAIL, atau set environment variable CONTACT_EMAIL."* User-Agent lengkap, termasuk email kampus, dicetak di output sel Setup sebagai bukti sesuai permintaan soal.
 - **Berkas utama wajib ada:** jika `data/raw/banyaknya-wisman-wisnus-2026.csv` belum ada, notebook berhenti dengan pesan yang menjelaskan cara menaruhnya.
 - **Jeda 10 detik:** `robots.txt` ckan.surabaya.go.id menetapkan `Crawl-delay: 10`, jadi notebook menunggu minimal 10 detik antar-request ke host itu. Seluruh eksekusi butuh sekitar 1–2 menit.
 - **Verifikasi tautan unduhan (Soal 1.9) tidak pernah menggagalkan notebook.** Jika host CKAN tidak terjangkau, diblokir, atau ditolak `robots.txt`, statusnya dicatat dan notebook lanjut. Jika MD5 berbeda dari unduhan manual (berkas di CKAN diperbarui lagi), perbedaannya ditampilkan.
@@ -174,13 +174,13 @@ python scripts\verify_submission.py
    - Setiap berkas raw, termasuk yang di subfolder, tercatat.
    - Baris sumber utama memuat domain data.go.id dan tanggal 17 November 2026.
 4. Berkas keluaran wajib tersedia dan sudah ter-track git. **GAGAL** jika masih ada placeholder (tanda kurung siku bertuliskan ISI SEBELUM KUMPUL); **PERINGATAN** jika tangkapan layar bukti belum ada atau ada frasa bukti Open-Meteo yang tidak ditemukan.
-5. `.env` tidak ter-track git, dan nilai `CONTACT_EMAIL` tidak muncul di berkas mana pun yang ter-track maupun di output notebook. Nilai itu tidak pernah dicetak.
+5. `.env` tidak ter-track git; output notebook memuat User-Agent dengan alamat `@instiki.ac.id`; dan tidak ada alamat email lain di berkas ter-track selain `@instiki.ac.id` dan `noreply.github.com`. Data mentah pihak ketiga di `data/raw/` dikecualikan dari pemeriksaan ini karena tidak boleh diubah (misalnya halaman ketentuan Open-Meteo memuat alamat kontak Open-Meteo sendiri).
 
 ## Etika akuisisi (ringkas)
 - `robots.txt` diperiksa dengan `urllib.robotparser` sebelum akses (ckan.surabaya.go.id, Open-Meteo, Wikipedia). Path `/api/` CKAN dilarang dan tidak dipakai; `Crawl-delay: 10` ditegakkan.
 - Setiap request memakai `timeout`, User-Agent jujur berisi kontak, jeda antar-request per host, dan retry dengan *exponential backoff* untuk 429/5xx.
 - Tidak memakai sumber yang dilarang soal (Booking.com, Agoda, Traveloka, tiket.com, Airbnb, Tripadvisor, Google Maps, media sosial).
-- Tidak ada API key. Soal meminta email kampus di User-Agent, tetapi mahasiswa tidak diberi email kampus, sehingga dipakai email pribadi yang hanya ada di `.env` lokal atau environment variable.
+- Tidak ada API key. Sesuai permintaan soal, User-Agent memuat email kampus `mahasiswa@instiki.ac.id`, yang dibaca dari `CONTACT_EMAIL` (`.env` lokal atau environment variable); `.env` tidak di-commit.
 - Karena lisensi tidak eksplisit, data kunjungan dipakai terbatas untuk keperluan akademik non-komersial dengan atribusi lengkap.
 
 ## Catatan kualitas data

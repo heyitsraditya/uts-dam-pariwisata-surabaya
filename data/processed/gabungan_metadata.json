@@ -149,7 +149,7 @@
     },
     "ketidakcocokan_metadata_katalog": "(1) label resource 'per Januari 2025 - Agustus 2026' tetapi berkas sampai Oktober 2026; (2) metadata dimodifikasi 25-09-2026 tetapi berkas memuat data Oktober 2026; (3) slug URL berakhiran '-ta-2025' tetapi berkas memuat tahun [2025, 2026]. data.go.id = katalog; berkas dihosting di ckan.surabaya.go.id dan diperbarui tanpa metadata katalog ikut berubah."
   },
-  "tanggal_proses": "2026-11-17T14:26:43+07:00",
+  "tanggal_proses": "2026-11-18T22:11:25+07:00",
   "berkas": "data/processed/gabungan.csv",
   "md5": "3113f35ec241765448a146bbafb9331d"
 }
