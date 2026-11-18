@@ -4,12 +4,12 @@ Cara pakai (dari root repo):
     python scripts/verify_submission.py
 
 Setiap pemeriksaan mencetak LULUS, GAGAL, atau PERINGATAN. Kode keluar 0 jika tidak ada GAGAL, 1 jika ada.
-Nilai CONTACT_EMAIL hanya dibandingkan di memori dan TIDAK PERNAH dicetak.
+Alamat email di luar daftar izin hanya dicetak tersamar (domainnya saja).
 """
 import csv
 import hashlib
 import json
-import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -48,14 +48,14 @@ def git_ls_files(*args):
     return [baris for baris in keluaran.stdout.splitlines() if baris]
 
 
-def baca_contact_email():
-    """Ambil CONTACT_EMAIL dari environment variable, atau dari .env jika env kosong. Tidak dicetak."""
-    nilai = os.environ.get("CONTACT_EMAIL", "").strip()
-    if not nilai and (ROOT / ".env").exists():
-        for baris in (ROOT / ".env").read_text(encoding="utf-8").splitlines():
-            if baris.strip().startswith("CONTACT_EMAIL="):
-                nilai = baris.split("=", 1)[1].strip().strip("'\"")
-    return nilai
+POLA_EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+POLA_UA_KAMPUS = re.compile(r"UTS-DAM-INSTIKI/\S+ \([^)]*kontak: [A-Za-z0-9._%+-]+@instiki\.ac\.id\)")
+
+
+def email_diizinkan(alamat):
+    """Alamat yang boleh ada di repo: email kampus @instiki.ac.id dan alamat noreply GitHub."""
+    a = alamat.lower()
+    return a.endswith("@instiki.ac.id") or a.endswith("noreply.github.com")
 
 
 # ---------------------------------------------------------------- 1. Notebook
@@ -180,18 +180,28 @@ try:
     catat("Semua keluaran sudah ter-track git (siap commit)", not belum_track,
           f"belum di-git add: {belum_track[:8] or 'tidak ada'}")
 
-    email = baca_contact_email()
-    if not email:
-        catat("CONTACT_EMAIL tidak muncul di repo maupun output notebook", False,
-              "CONTACT_EMAIL kosong di environment dan .env, sehingga tidak bisa diperiksa")
-    else:
-        target = email.lower().encode("utf-8")
-        bocor = [b for b in tracked if (ROOT / b).is_file() and target in (ROOT / b).read_bytes().lower()]
-        if NOTEBOOK.exists() and target in NOTEBOOK.read_bytes().lower() and "uts_dam.ipynb" not in bocor:
-            bocor.append("uts_dam.ipynb")
-        # Hanya nama berkas yang dicetak, tidak pernah nilai email
-        catat("CONTACT_EMAIL tidak muncul di repo maupun output notebook", not bocor,
-              f"ditemukan di: {bocor or 'tidak ada'} (nilai tidak dicetak; panjang {len(email)} karakter)")
+    # (a) Output notebook memuat User-Agent dengan email kampus @instiki.ac.id
+    ua = POLA_UA_KAMPUS.search(teks_output_notebook())
+    catat("Output notebook memuat User-Agent dengan alamat @instiki.ac.id", ua is not None,
+          ua.group(0) if ua else "tidak ditemukan; jalankan ulang notebook dengan CONTACT_EMAIL=mahasiswa@instiki.ac.id")
+
+    # (b) Tidak ada alamat email lain di berkas ter-track selain @instiki.ac.id dan noreply.github.com.
+    #     data/raw/ dikecualikan: data mentah pihak ketiga tidak boleh diubah (mis. kontak Open-Meteo di halamannya).
+    bocor, dikecualikan = {}, {}
+    for b in tracked:
+        p = ROOT / b
+        if not p.is_file():
+            continue
+        try:
+            teks = p.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        lain = [e for e in POLA_EMAIL.findall(teks) if not email_diizinkan(e)]
+        if lain:
+            target = dikecualikan if b.startswith("data/raw/") else bocor
+            target[b] = sorted({"…@" + e.split("@", 1)[1].lower() for e in lain})  # hanya domain yang dicetak
+    catat("Tidak ada alamat email lain di repo (selain @instiki.ac.id dan noreply.github.com)", not bocor,
+          f"ditemukan di: {bocor or 'tidak ada'}; dikecualikan (data/raw pihak ketiga): {dikecualikan or 'tidak ada'}")
 except (OSError, subprocess.CalledProcessError) as err:
     catat("Git: repo dapat diperiksa", False, str(err))
 

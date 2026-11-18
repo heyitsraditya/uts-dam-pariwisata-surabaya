@@ -5,12 +5,12 @@ Buka `uts_dam.ipynb` yang sudah dieksekusi. Angka dalam kurung siku `[n]` adalah
 | Waktu | Bagian | Sel | Yang ditunjukkan dan dikatakan |
 |---|---|---|---|
 | 0:00–0:20 | Judul | (markdown) | "Topik saya kunjungan wisatawan ke 16 destinasi di Kota Surabaya tahun 2025 dan cuaca bulanannya. Tiga sumber: berkas dari data.go.id, API Open-Meteo, dan scraping tabel kecamatan Wikipedia." |
-| 0:20–0:45 | 0. Setup | [2], [3] | [2]: email kontak dibaca dari env/.env, User-Agent tampil dengan kontak **disamarkan**. [3]: `etis_get()` berisi timeout, jeda per host, retry + *exponential backoff* untuk 429/5xx, dan log status code. |
+| 0:20–0:45 | 0. Setup | [2], [3] | [2]: email kampus dibaca dari env/.env, dan User-Agent **lengkap** (memuat `mahasiswa@instiki.ac.id`) tampil di output. [3]: `etis_get()` berisi timeout, jeda per host, retry + *exponential backoff* untuk 429/5xx, dan log status code. |
 | 0:45–1:15 | 1.1 Sumber utama | [4], [5] | Tabel peran: data.go.id = katalog (diizinkan soal), ckan.surabaya.go.id = host berkas, Pemerintah Kota Surabaya = penerbit asli. Berkas diunduh manual 17 November 2026; MD5 dihitung [5]. |
 | 1:15–1:45 | 1.2 Parameter baca | [6]–[8] | Byte mentah: ASCII, tanpa BOM, CRLF, 1 header + 352 baris, 8 `;` di header. Jadi `sep=";"`, `encoding="utf-8"`; kode wilayah dibaca sebagai teks; `na_values`/`thousands`/`skiprows` tidak perlu. |
 | 1:45–2:15 | 1.3–1.5 Identifikasi | [10]–[14] | Makna kolom (parafrase definisi portal) [10]. Spasi di ujung nama hanya pada 12 baris 2025 [11]. **Tiga ketidakcocokan katalog vs berkas** [13]. TAHUN_DATA = 2025, nilai nol subset 2025 [14]. |
 | 2:15–2:40 | 1.6–1.9 Kualitas & verifikasi | [15], [17], [19] | Pasangan bulan diduga disalin: Juni–Juli 2025 16/16, November 2025 15/16, September–Oktober 2026 15/16 [15]. Estimasi storage [17]. Unduhan ulang dari tautan CKAN: robots.txt dipatuhi, MD5 "identik dengan unduhan manual" [19]. |
-| 2:40–3:05 | 2. Etika | [21]–[23] | Lisensi tidak dicantumkan; status akses Terbuka; banner SDI [21]. Tabel PII: tidak ada [22]. Markdown 2.3 tentang email pribadi. Checklist 9 butir [23]. |
+| 2:40–3:05 | 2. Etika | [21]–[23] | Lisensi tidak dicantumkan; status akses Terbuka; banner SDI [21]. Tabel PII: tidak ada [22]. Markdown 2.3 tentang isi User-Agent (email kampus). Checklist 9 butir [23]. |
 | 3:05–3:40 | 3. API | [24]–[29] | Markdown 3.1: kenapa bukan API CKAN (`/api/` dilarang). Rentang tanggal diturunkan dari data [24], satu request + log status [25], kutipan lisensi Open-Meteo [26]. **365 baris** harian lalu 12 bulanan [27]–[28]. |
 | 3:40–4:05 | 4. Scraping | [30]–[33] | robots.txt Wikipedia dan `can_fetch() = True` [30]. `pd.read_html`: 31 kecamatan [31]–[32]. Footer CC BY-SA 4.0 dan atribusi [33]. |
 | 4:05–4:40 | 5. Merge | [34]–[39] | Tabel perubahan kunci [34]. Kunci cuaca unik [35]. `validate="many_to_one"`, `indicator=True`: **192 → 192**, semua `both`, `duplicated().sum() == 0` [36]. `gabungan.csv` dengan kolom `diduga_salinan`, metadata + MD5 [38]–[39]. |
@@ -51,8 +51,8 @@ Rencana awal memang Bali. Saat seleksi, dataset Bali tidak dapat dipakai dari li
 
 Dataset kunjungan wisatawan Kota Surabaya terdaftar di data.go.id, punya lebih dari 100 baris, dan tetap di sektor pariwisata.
 
-**8. Kenapa email pribadi di User-Agent, bukan email kampus?**
-Soal meminta email kampus, tetapi mahasiswa tidak diberi email kampus. Fungsinya agar pemilik situs bisa menghubungi pengakses, dan email pribadi memenuhi fungsi itu. Email dibaca dari `.env` atau environment variable, tidak tertulis di notebook, tidak dicetak, dan tidak di-commit; `scripts/verify_submission.py` memastikannya.
+**8. Apa isi User-Agent dan kenapa?**
+Isinya nama klien, tujuan akademik, dan kontak: `UTS-DAM-INSTIKI/1.0 (tugas kuliah Data Acquisition & Management; kontak: mahasiswa@instiki.ac.id) python-requests/<versi>`. Soal mewajibkan User-Agent berisi email kampus agar pemilik situs tahu siapa yang mengakses dan bisa menghubungi bila ada masalah; Wikimedia juga meminta kontak di User-Agent. Email dibaca dari `CONTACT_EMAIL` (`.env` atau environment variable), dan User-Agent lengkapnya dicetak di sel Setup [2] sebagai bukti. `.env` tidak di-commit; yang ada di repo hanya `.env.example`.
 
 **9. Kenapa tidak memakai API resmi portal sumber seperti yang diminta soal?**
 Soal meminta *mengutamakan* API resmi. API yang melayani berkas ini adalah CKAN API di host berkas, dan robots.txt host itu menulis `Disallow: /api/` (`can_fetch_api = False` di [19]). Memakainya berarti melanggar kepatuhan, jadi saya memakai alternatif yang disebut soal: API publik Open-Meteo untuk cuaca di lokasi dataset.
