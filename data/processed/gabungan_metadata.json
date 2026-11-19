@@ -45,36 +45,31 @@
       "sumber": "kunjungan",
       "kolom": "nama_destinasi",
       "perubahan": "str.strip() menghapus spasi di ujung (hanya pada salinan)",
-      "baris_terdampak": 12,
-      "contoh": "'ALUN ALUN SURABAYA BALAI PEMUDA ' -> tanpa spasi akhir"
+      "baris_terdampak": 12
     },
     {
       "sumber": "kunjungan",
       "kolom": "periode -> bulan",
       "perubahan": "nama bulan Indonesia dipetakan ke angka 1-12",
-      "baris_terdampak": 192,
-      "contoh": "'Januari' -> 1, ..., 'Desember' -> 12"
+      "baris_terdampak": 192
     },
     {
       "sumber": "kunjungan",
       "kolom": "tahun",
       "perubahan": "difilter ke TAHUN_DATA = 2025",
-      "baris_terdampak": 160,
-      "contoh": "baris tahun lain dikecualikan dari analisis (tetap ada di raw)"
+      "baris_terdampak": 160
     },
     {
       "sumber": "kunjungan",
       "kolom": "diduga_salinan",
       "perubahan": "kolom penanda ditambahkan (nilai tidak diubah)",
-      "baris_terdampak": 32,
-      "contoh": "bulan bertanda: ['Juli', 'November']"
+      "baris_terdampak": 32
     },
     {
       "sumber": "cuaca",
       "kolom": "time -> bulan",
-      "perubahan": "tanggal harian diagregasi per bulan (dt.month)",
-      "baris_terdampak": 365,
-      "contoh": "365 baris harian -> 12 baris bulanan"
+      "perubahan": "365 baris harian diagregasi per bulan (dt.month)",
+      "baris_terdampak": 365
     }
   ],
   "how": "left",
@@ -149,7 +144,7 @@
     },
     "ketidakcocokan_metadata_katalog": "(1) label resource 'per Januari 2025 - Agustus 2026' tetapi berkas sampai Oktober 2026; (2) metadata dimodifikasi 25-09-2026 tetapi berkas memuat data Oktober 2026; (3) slug URL berakhiran '-ta-2025' tetapi berkas memuat tahun [2025, 2026]. data.go.id = katalog; berkas dihosting di ckan.surabaya.go.id dan diperbarui tanpa metadata katalog ikut berubah."
   },
-  "tanggal_proses": "2026-11-18T22:11:25+07:00",
+  "tanggal_proses": "2026-11-19T07:58:48+07:00",
   "berkas": "data/processed/gabungan.csv",
   "md5": "3113f35ec241765448a146bbafb9331d"
 }
