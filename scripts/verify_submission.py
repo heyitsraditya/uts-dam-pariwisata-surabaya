@@ -134,13 +134,13 @@ except (OSError, KeyError) as err:
     catat("Provenance: provenance.csv tersedia", False, str(err))
 
 # ---------------------------------------------------------------- 4. Berkas wajib, placeholder, dan bukti
-wajib_ada = ["uts_dam.ipynb", "README.md", "DEMO.md", "data_ethics_checklist.md", "provenance.csv",
+wajib_ada = ["uts_dam.ipynb", "README.md", "data_ethics_checklist.md", "provenance.csv",
              "requirements.txt", ".env.example", ".gitignore", "data/processed/gabungan.csv",
              "data/processed/gabungan_metadata.json", str(BERKAS_UTAMA.relative_to(ROOT))]
 hilang = [b for b in wajib_ada if not (ROOT / b).exists()]
 catat("Berkas keluaran wajib tersedia", not hilang, f"hilang: {hilang or 'tidak ada'}")
 
-berkas_placeholder = ["provenance.csv", "README.md", "DEMO.md", "data_ethics_checklist.md", "uts_dam.ipynb"]
+berkas_placeholder = ["provenance.csv", "README.md", "data_ethics_checklist.md", "uts_dam.ipynb"]
 masih_kosong = [b for b in berkas_placeholder
                 if (ROOT / b).exists() and PLACEHOLDER in (ROOT / b).read_text(encoding="utf-8")]
 catat(f"Tidak ada '{PLACEHOLDER}' yang tersisa", not masih_kosong, f"masih ada di: {masih_kosong or 'tidak ada'}")

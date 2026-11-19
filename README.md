@@ -26,7 +26,7 @@ Seluruh akuisisi, pembersihan, dan penggabungan data ada di **satu notebook**: `
 | Host berkas (tujuan tombol *Download*) | ckan.surabaya.go.id — tautan: `https://ckan.surabaya.go.id/dataset/5c1cb1a5-8b39-42df-a8c3-48fff07fec6e/resource/3a969972-e959-462d-b37b-cbdd14830f0b/download/banyaknya-wisman-wisnus-2026.csv` |
 | Penerbit asli | Pemerintah Kota Surabaya |
 
-Berkas diunduh **manual lewat peramban oleh mahasiswa** dengan tombol *Download* di halaman data.go.id pada **17 November 2026**. MD5: `2658a38dff0ec62756fbd1147fd6914a`. Bukti tangkapan layar metadata: `docs/bukti_metadata_data_go_id_2026-11-17.png`. Notebook juga mengunduh ulang tautan yang sama dengan skrip (Soal 1.9), lalu membandingkan MD5-nya.
+Berkas diunduh **manual lewat peramban oleh mahasiswa** dengan tombol *Download* di halaman data.go.id pada **17 November 2026**. MD5: `2658a38dff0ec62756fbd1147fd6914a`. Bukti tangkapan layar metadata: `docs/bukti_metadata_data_go_id_2026-11-17.png`. Notebook juga mengunduh ulang tautan yang sama dengan skrip (Soal 1.6), lalu membandingkan MD5-nya.
 
 ### Ketidakcocokan metadata katalog dengan isi berkas
 1. Label resource menyebut cakupan "per Januari 2025 - Agustus 2026", padahal berkas memuat data hingga **Oktober 2026**.
@@ -42,7 +42,20 @@ Tabel (c) tidak ikut di-merge karena data kunjungan tidak punya kolom kecamatan.
 
 **API resmi portal:** API yang melayani berkas ini adalah CKAN API di host berkas, dan `robots.txt` host itu melarang `/api/`. Karena itu dipakai API publik Open-Meteo, sesuai alternatif yang disebut soal.
 
-## Cara menjalankan
+## Menjalankan di Google Colab
+
+Siapkan folder `MyDrive/uts_dam/` di Google Drive:
+
+```
+uts_dam/
+├── uts_dam.ipynb
+├── scripts/verify_submission.py
+└── data/raw/banyaknya-wisman-wisnus-2026.csv   # unduhan manual, nama dan MD5 persis sama
+```
+
+Buka `uts_dam.ipynb` di Colab, pilih **Runtime, Run all**, dan izinkan akses Drive. Sel pertama me-mount Drive dan memasang paket yang kurang; email kontak otomatis memakai email kampus, jadi `.env` tidak diperlukan.
+
+## Cara menjalankan di komputer lokal
 
 Jalankan dari jaringan sendiri (laptop). Kuota harian Open-Meteo dihitung per IP, dan Wikimedia meminta User-Agent yang berisi kontak.
 
@@ -53,9 +66,6 @@ git clone https://github.com/heyitsraditya/uts-dam-pariwisata-surabaya.git
 ```
 ```bash
 cd uts-dam-pariwisata-surabaya
-```
-```bash
-git checkout uts-dam-surabaya
 ```
 ```bash
 python3 -m venv .venv
@@ -86,9 +96,6 @@ git clone https://github.com/heyitsraditya/uts-dam-pariwisata-surabaya.git
 cd uts-dam-pariwisata-surabaya
 ```
 ```powershell
-git checkout uts-dam-surabaya
-```
-```powershell
 py -m venv .venv
 ```
 ```powershell
@@ -113,7 +120,7 @@ python scripts\verify_submission.py
 - **Email kontak (email kampus)** `mahasiswa@instiki.ac.id` dibaca dari environment variable `CONTACT_EMAIL`. Jika variabel itu tidak ada, notebook membacanya dari `.env`. Jika keduanya kosong, notebook berhenti dengan pesan *"CONTACT_EMAIL kosong. Buat .env dari .env.example dan isi CONTACT_EMAIL, atau set environment variable CONTACT_EMAIL."* User-Agent lengkap, termasuk email kampus, dicetak di output sel Setup sebagai bukti sesuai permintaan soal.
 - **Berkas utama wajib ada:** jika `data/raw/banyaknya-wisman-wisnus-2026.csv` belum ada, notebook berhenti dengan pesan yang menjelaskan cara menaruhnya.
 - **Jeda 10 detik:** `robots.txt` ckan.surabaya.go.id menetapkan `Crawl-delay: 10`, jadi notebook menunggu minimal 10 detik antar-request ke host itu. Seluruh eksekusi butuh sekitar 1–2 menit.
-- **Verifikasi tautan unduhan (Soal 1.9) tidak pernah menggagalkan notebook.** Jika host CKAN tidak terjangkau, diblokir, atau ditolak `robots.txt`, statusnya dicatat dan notebook lanjut. Jika MD5 berbeda dari unduhan manual (berkas di CKAN diperbarui lagi), perbedaannya ditampilkan.
+- **Verifikasi tautan unduhan (Soal 1.6) tidak pernah menggagalkan notebook.** Jika host CKAN tidak terjangkau, diblokir, atau ditolak `robots.txt`, statusnya dicatat dan notebook lanjut. Jika MD5 berbeda dari unduhan manual (berkas di CKAN diperbarui lagi), perbedaannya ditampilkan.
 - **Menangani HTTP 429 (Too Many Requests):**
   - `etis_get()` otomatis mencoba ulang hingga 4 kali dengan jeda 2, 4, 8, dan 16 detik, atau sesuai header `Retry-After` jika ada.
   - Jika Open-Meteo membalas *"Daily API request limit exceeded"*, kuota harian untuk IP Anda habis. Notebook berhenti dengan pesan galat. Tunggu hingga hari berikutnya (atau pindah jaringan), lalu jalankan ulang perintah `nbconvert`. Berkas yang sudah terunduh tidak diunduh lagi.
@@ -123,11 +130,6 @@ python scripts\verify_submission.py
   - Sumber lain (verifikasi CKAN, Open-Meteo, Wikipedia, robots.txt): diisi otomatis dari waktu unduh sebenarnya (WIB) dan disimpan di berkas pendamping `*.akses`.
 - **Data mentah tidak pernah ditimpa:** berkas yang sudah ada di `data/raw/` dipakai apa adanya, dan MD5-nya dicocokkan ulang di akhir notebook.
 - **Bukti Open-Meteo diverifikasi otomatis:** saat eksekusi, kode mencari frasa "CC-BY 4.0 licence", "non-commercial", dan "10'000 API calls per day" (ejaan asli halaman ketentuan) dengan pola regex yang toleran ejaan, lalu menampilkan kutipannya. Halaman `/en/license` dirender lewat JavaScript sehingga teksnya kosong saat diunduh, jadi bukti lisensi diambil dari halaman ketentuan (`/en/terms`). Frasa yang tidak ditemukan ditandai di output dan di `provenance.csv`, dan `verify_submission.py` memberi PERINGATAN agar halamannya Anda periksa manual.
-- **Alasan API (Soal 3.1):** isi bagian data.go.id yang masih berupa placeholder (tanda kurung siku bertuliskan ISI SEBELUM KUMPUL) dengan hasil pemeriksaan Anda: apakah data.go.id menyediakan API publik terdokumentasi untuk mengambil isi dataset ini.
-- **Setelah lulus verifikasi**, tambahkan tangkapan layar metadata lalu commit hasilnya (`.env` otomatis diabaikan oleh `.gitignore`):
-  ```bash
-  git add uts_dam.ipynb data docs provenance.csv data_ethics_checklist.md README.md
-  ```
 
 ## Struktur folder
 
@@ -158,7 +160,6 @@ python scripts\verify_submission.py
 │       └── gabungan_metadata.json
 ├── provenance.csv              # URL, tanggal akses, lisensi, MD5, cara perolehan, bukti tiap sumber
 ├── data_ethics_checklist.md    # 9 butir (dibuat ulang oleh notebook)
-├── DEMO.md                     # skrip demo 5 menit + tanya-jawab
 ├── requirements.txt
 ├── .env.example                # contoh konfigurasi; .env asli tidak di-commit
 └── .gitignore
